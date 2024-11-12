@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OIR Rituali Lunari</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .lunar-bg {
+            background: linear-gradient(to bottom right, #f3e8ff, #e0e7ff);
+            min-height: 100vh;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        @media (max-width: 768px) {
+            .card {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+            .section-card {
+                margin: 0.5rem 0;
+                padding: 1rem;
+                background: rgba(255, 255, 255, 0.5);
+                border-radius: 0.5rem;
+            }
+            input[type="date"] {
+                font-size: 16px;
+            }
+        }
+        .section-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .section-content.active {
+            max-height: 1000px;
+            transition: max-height 0.5s ease-in;
+        }
+    </style>
+</head>
+<body class="lunar-bg text-gray-800">
+    <div id="app" class="max-w-4xl mx-auto p-4 md:p-6">
+        <div class="card">
+            <div class="sticky top-0 z-10 bg-white/90 backdrop-blur-sm p-4 border-b">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-xl md:text-2xl font-bold text-center flex-1 flex items-center justify-center gap-2">
+                        ⭐ OIR Rituali Lunari ⭐
+                    </h1>
+                    <select id="language" class="p-1 border rounded text-sm">
+                        <option value="it">🇮🇹 IT</option>
+                        <option value="en">🇬🇧 EN</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="p-4 md:p-6">
+                <div class="mb-6">
+                    <div id="currentDate" class="text-sm mb-2"></div>
+                    <input type="date" 
+                        id="dateSelector" 
+                        class="w-full p-2 border rounded bg-white/50"
+                    >
+                </div>
+
+                <div id="lunarInfo" class="text-center space-y-4 mb-6">
+                    <div id="moonPhase" class="text-6xl md:text-7xl"></div>
+                    <div id="phaseName" class="text-xl md:text-2xl font-semibold"></div>
+                    <div id="illumination" class="text-lg md:text-xl"></div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="section-card">
+                        <div class="section-toggle flex justify-between items-center mb-2">
+                            <h2 class="font-bold text-lg">✨ Info Cabalistiche</h2>
+                            <span class="transform transition-transform duration-200">▼</span>
+                        </div>
+                        <div id="leftColumn" class="section-content space-y-3"></div>
+                    </div>
+
+                    <div class="section-card">
+                        <div class="section-toggle flex justify-between items-center mb-2">
+                            <h2 class="font-bold text-lg">🔮 Rituali e Strumenti</h2>
+                            <span class="transform transition-transform duration-200">▼</span>
+                        </div>
+                        <div id="rightColumn" class="section-content space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+let currentLanguage = 'it';
+
+const translations = {
+    it: {
+        title: "OIR Rituali Lunari - Golden Dawn",
+        sephirah: "Sephirah",
+        path: "Sentiero",
+        divineName: "Nome Divino",
+        archangel: "Arcangelo",
+        order: "Ordine Angelico",
+        rituals: "Rituali",
+        tools: "Strumenti",
+        incense: "Incensi",
+        colors: "Colori",
+        illumination: "Illuminazione"
+    },
+    en: {
+        title: "OIR Lunar Rituals - Golden Dawn",
+        sephirah: "Sephirah",
+        path: "Path",
+        divineName: "Divine Name",
+        archangel: "Archangel",
+        order: "Angelic Order",
+        rituals: "Rituals",
+        tools: "Tools",
+        incense: "Incense",
+        colors: "Colors",
+        illumination: "Illumination"
+    }
+};
+
+const goldenDawnData = {
+    0: {
+        name: { it: "Luna Nuova", en: "New Moon" },
+        symbol: "🌑",
+        sephirah: "Yesod",
+        path: "32 - Tav",
+        divineName: "Shaddai El Chai",
+        archangel: "Gabriel",
+        order: "Kerubim",
+        rituals: {
+            it: ["Rituale del Pilastro del Centro", "Rituale Minore di Bandizione", "Rituale del Pilastro di Mezzo"],
+            en: ["Middle Pillar Ritual", "Lesser Banishing Ritual", "Middle Pillar"]
+        },
+        tools: ["Coppa d'Argento", "Specchio Magico"],
+        incense: ["Gelsomino", "Sandalo"],
+        colors: ["Viola", "Argento"]
+    },
+    1: {
+        name: { it: "Luna Crescente", en: "Waxing Moon" },
+        symbol: "🌒",
+        sephirah: "Yesod-Tiphereth",
+        path: "25 - Samekh",
+        divineName: "YHVH Eloah ve-Daath",
+        archangel: "Gabriel-Michael",
+        order: "Melekim",
+        rituals: {
+            it: ["Rituale della Rosa Croce", "Rituale Supremo di Invocazione"],
+            en: ["Ritual of the Rose Cross", "Supreme Invoking Ritual"]
+        },
+        tools: ["Bacchetta", "Lama Magica"],
+        incense: ["Franchincenso", "Mirra"],
+        colors: ["Blu-Viola", "Oro"]
+    },
+    2: {
+        name: { it: "Luna Piena", en: "Full Moon" },
+        symbol: "🌕",
+        sephirah: "Tiphereth",
+        path: "13 - Gimel",
+        divineName: "YHVH Eloah ve-Daath",
+        archangel: "Michael",
+        order: "Melekim",
+        rituals: {
+            it: ["Grande Rituale di Invocazione", "Cerimonia della Luna Piena"],
+            en: ["Greater Invoking Ritual", "Full Moon Ceremony"]
+        },
+        tools: ["Bacchetta d'Oro", "Rosa Mistica"],
+        incense: ["Franchincenso", "Rosa"],
+        colors: ["Oro", "Bianco"]
+    },
+    3: {
+        name: { it: "Luna Calante", en: "Waning Moon" },
+        symbol: "🌘",
+        sephirah: "Yesod-Malkuth",
+        path: "31 - Shin",
+        divineName: "Adonai ha-Aretz",
+        archangel: "Gabriel-Sandalphon",
+        order: "Ashim",
+        rituals: {
+            it: ["Rituale del Pentagramma di Terra", "Rituale Minore di Bandizione"],
+            en: ["Earth Pentagram Ritual", "Lesser Banishing"]
+        },
+        tools: ["Pantacolo", "Sale Consacrato"],
+        incense: ["Mirra", "Cipresso"],
+        colors: ["Nero", "Indaco"]
+    }
+};
+
+const dateFormatter = {
+    it: new Intl.DateTimeFormat('it-IT', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    }),
+    en: new Intl.DateTimeFormat('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    })
+};
+
+function getLunarPhase(date) {
+    const msPerDay = 86400000;
+    const baseDate = new Date(2000, 0, 6, 18, 0, 0);
+    const lunarMonth = 29.530588853;
+    
+    const daysSinceBase = (date.getTime() - baseDate.getTime()) / msPerDay;
+    const newMoons = daysSinceBase / lunarMonth;
+    const currentAge = (newMoons - Math.floor(newMoons)) * lunarMonth;
+    
+    const illumination = ((1 - Math.cos((currentAge / lunarMonth) * 2 * Math.PI)) / 2) * 100;
+    
+    return {
+        phase: Math.floor((currentAge / lunarMonth) * 4),
+        illumination: illumination
+    };
+}
+
+function updateDisplay(date) {
+    const { phase, illumination } = getLunarPhase(date);
+    const phaseInfo = goldenDawnData[phase % 4];
+    
+    document.getElementById('moonPhase').textContent = phaseInfo.symbol;
+    document.getElementById('phaseName').textContent = phaseInfo.name[currentLanguage];
+    document.getElementById('illumination').textContent = 
+        `${translations[currentLanguage].illumination}: ${illumination.toFixed(1)}%`;
+    document.getElementById('currentDate').textContent = dateFormatter[currentLanguage].format(date);
+
+    const leftColumn = document.getElementById('leftColumn');
+    const rightColumn = document.getElementById('rightColumn');
+    
+    leftColumn.innerHTML = `
+        <div>
+            <div class="font-bold">${translations[currentLanguage].sephirah}:</div>
+            <div>${phaseInfo.sephirah}</div>
+        </div>
+        <div>
+            <div class="font-bold">${translations[currentLanguage].path}:</div>
+            <div>${phaseInfo.path}</div>
+        </div>
+        <div>
+            <div class="font-bold">${translations[currentLanguage].divineName}:</div>
+            <div>${phaseInfo.divineName}</div>
+        </div>
+        <div>
+            <div class="font-bold">${translations[currentLanguage].archangel}:</div>
+            <div>${phaseInfo.archangel}</div>
+        </div>
+        <div>
+            <div class="font-bold">${translations[currentLanguage].order}:</div>
+            <div>${phaseInfo.order}</div>
+        </div>
+    `;
+
+    rightColumn.innerHTML = `
+        <div>
+            <div class="font-bold">${translations[currentLanguage].rituals}:</div>
+            <ul class="list-disc pl-5">
+                ${phaseInfo.rituals[currentLanguage].map(ritual => `<li>${ritual}</li>`).join('')}
+            </ul>
+        </div>
+        <div>
+            <div class="font-bold">${translations[currentLanguage].tools}:</div>
+            <ul class="list-disc pl-5">
+                ${phaseInfo.tools.map(tool => `<li>${tool}</li>`).join('')}
+            </ul>
+        </div>
+        <div>
+            <div class="font-bold">${translations[currentLanguage].incense}:</div>
+            <ul class="list-disc pl-5">
+                ${phaseInfo.incense.map(inc => `<li>${inc}</li>`).join('')}
+            </ul>
+        </div>
+        <div>
+            <div class="font-bold">${translations[currentLanguage].colors}:</div>
+            <ul class="list-disc pl-5">
+                ${phaseInfo.colors.map(color => `<li>${color}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+}
+
+// Inizializzazione
+const today = new Date();
+document.getElementById('dateSelector').valueAsDate = today;
+updateDisplay(today);
+
+// Event Listeners
+document.getElementById('dateSelector').addEventListener('change', (e) => {
+    updateDisplay(new Date(e.target.value));
+});
+
+document.getElementById('language').addEventListener('change', (e) => {
+    currentLanguage = e.target.value;
+    updateDisplay(document.getElementById('dateSelector').valueAsDate);
+});
+
+// Toggle sezioni su mobile
+document.querySelectorAll('.section-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+        const content = toggle.nextElementSibling;
+        const arrow = toggle.querySelector('span');
+        content.classList.toggle('active');
+        arrow.style.transform = content.classList.contains('active') ? 'rotate(180deg)' : '';
+    });
+});
+
+// Inizializza con la prima sezione aperta
+document.querySelectorAll('.section-content').forEach(section => {
+    section.classList.add('active');
+});
+</script>
+</body>
+</html>
